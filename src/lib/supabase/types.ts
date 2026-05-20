@@ -23,7 +23,6 @@ export type Alert = {
   full_text: string | null;
   summary: string | null;
   tags: string[];
-  actioned_at: string | null;
   stream_url: string | null;
   created_at: string;
 };

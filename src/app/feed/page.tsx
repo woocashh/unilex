@@ -6,7 +6,6 @@ import { enUS } from "date-fns/locale";
 import { TopNav } from "@/components/TopNav";
 import { FilterBar, type StatusFilter } from "@/components/FilterBar";
 import { FeedItem } from "@/components/FeedItem";
-import { ApplyReadState } from "@/components/ClientReadState";
 
 type SearchParams = Promise<{
   from?: string;
@@ -40,8 +39,6 @@ export default async function FeedPage({ searchParams }: { searchParams: SearchP
     .limit(500);
 
   if (selectedSource) alertsQuery = alertsQuery.eq("source_id", selectedSource.id);
-  if (status === "open") alertsQuery = alertsQuery.is("actioned_at", null);
-  if (status === "actioned") alertsQuery = alertsQuery.not("actioned_at", "is", null);
   if (query) {
     const safe = query.replace(/[%,]/g, " ");
     alertsQuery = alertsQuery.or(
@@ -50,7 +47,7 @@ export default async function FeedPage({ searchParams }: { searchParams: SearchP
   }
 
   const [
-    { data: alerts },
+    { data: alertsRaw },
     {
       data: { user },
     },
@@ -59,21 +56,30 @@ export default async function FeedPage({ searchParams }: { searchParams: SearchP
   const sourceById = new Map<string, Source>(allSources.map((s) => [s.id, s]));
 
   const readIds = new Set<string>();
-  if (user && alerts?.length) {
-    const { data: reads } = await supabase
-      .from("alert_reads")
-      .select("alert_id")
-      .in("alert_id", alerts.map((a) => a.id));
+  const actionedIds = new Set<string>();
+  if (user && alertsRaw?.length) {
+    const ids = alertsRaw.map((a) => a.id);
+    const [{ data: reads }, { data: actions }] = await Promise.all([
+      supabase.from("alert_reads").select("alert_id").in("alert_id", ids),
+      supabase.from("alert_actions").select("alert_id").in("alert_id", ids),
+    ]);
     for (const r of reads ?? []) readIds.add(r.alert_id);
+    for (const a of actions ?? []) actionedIds.add(a.alert_id);
   }
 
-  const grouped = groupByDay(alerts ?? []);
+  // Status filter is per-user, so it's applied in memory after the fetch.
+  const alerts = (alertsRaw ?? []).filter((a) => {
+    if (status === "open") return !actionedIds.has(a.id);
+    if (status === "actioned") return actionedIds.has(a.id);
+    return true;
+  });
+
+  const grouped = groupByDay(alerts);
   const hasFilters = !!query || !!selectedSource || !range.isDefault || !!status;
 
   return (
     <>
       <TopNav />
-      <ApplyReadState />
       <div className="mx-auto w-full max-w-4xl px-4 py-6">
         <div className="mb-5 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
           <FilterBar
@@ -88,7 +94,7 @@ export default async function FeedPage({ searchParams }: { searchParams: SearchP
 
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
             <span>
-              {alerts?.length ?? 0} item{(alerts?.length ?? 0) === 1 ? "" : "s"}
+              {alerts.length} item{alerts.length === 1 ? "" : "s"}
             </span>
             <span aria-hidden>·</span>
             <span>
@@ -126,6 +132,7 @@ export default async function FeedPage({ searchParams }: { searchParams: SearchP
                       alert={a}
                       source={sourceById.get(a.source_id)}
                       read={readIds.has(a.id)}
+                      actioned={actionedIds.has(a.id)}
                     />
                   ))}
                 </div>

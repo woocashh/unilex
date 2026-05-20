@@ -16,13 +16,14 @@ export function FeedItem({
   alert,
   source,
   read,
+  actioned,
 }: {
   alert: Alert;
   source?: Source;
   read: boolean;
+  actioned: boolean;
 }) {
   const publishedAt = alert.published_at ? new Date(alert.published_at) : null;
-  const actioned = !!alert.actioned_at;
 
   return (
     <article>

@@ -19,14 +19,25 @@ export default async function AlertPage({ params }: { params: Params }) {
   const { id } = await params;
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: alert }, { data: sources }] = await Promise.all([
+  const [{ data: alert }, { data: sources }, { data: userData }] = await Promise.all([
     supabase.from("alerts").select("*").eq("id", id).single(),
     supabase.from("sources").select("*"),
+    supabase.auth.getUser(),
   ]);
 
   if (!alert) notFound();
   const a = alert as Alert;
   const source = (sources as Source[] | null)?.find((s) => s.id === a.source_id);
+
+  let actionedAt: string | null = null;
+  if (userData.user) {
+    const { data: action } = await supabase
+      .from("alert_actions")
+      .select("actioned_at")
+      .eq("alert_id", a.id)
+      .maybeSingle();
+    actionedAt = action?.actioned_at ?? null;
+  }
 
   // Lazy-scrape: populate full_text on first view so we have body to display
   // and a cached input for summarization later. Safe to call repeatedly.
@@ -84,7 +95,7 @@ export default async function AlertPage({ params }: { params: Params }) {
                 <PlayIcon /> Transmisja na żywo
               </a>
             )}
-            <ActionedButton alertId={a.id} initialActionedAt={a.actioned_at} />
+            <ActionedButton alertId={a.id} initialActionedAt={actionedAt} />
           </div>
 
           {/* Article body preview */}
