@@ -4,6 +4,18 @@ import { pl } from "date-fns/locale";
 import type { Alert, Source } from "@/lib/supabase/types";
 import { SourceAvatar } from "./SourceAvatar";
 
+// Most PL gov sources only expose a date, parsed by adapters as UTC midnight.
+// Treat those as date-only so we render an absolute date instead of a
+// misleading "X hours ago" measured from 00:00 UTC.
+function isDateOnly(d: Date): boolean {
+  return (
+    d.getUTCHours() === 0 &&
+    d.getUTCMinutes() === 0 &&
+    d.getUTCSeconds() === 0 &&
+    d.getUTCMilliseconds() === 0
+  );
+}
+
 function CheckBadgeIcon() {
   return (
     <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -51,7 +63,9 @@ export function FeedItem({
                   dateTime={publishedAt.toISOString()}
                   title={format(publishedAt, "PPP", { locale: pl })}
                 >
-                  {formatDistanceToNow(publishedAt, { addSuffix: true, locale: pl })}
+                  {isDateOnly(publishedAt)
+                    ? format(publishedAt, "d MMM yyyy", { locale: pl })
+                    : formatDistanceToNow(publishedAt, { addSuffix: true, locale: pl })}
                 </time>
               </>
             )}
