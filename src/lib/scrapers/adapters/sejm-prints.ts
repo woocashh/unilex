@@ -3,10 +3,11 @@ import type { SourceAdapter, NormalizedItem } from "../types";
 // Sejm — druki (prints). Bills/proposals filed in the current Sejm term.
 // Uses the official api.sejm.gov.pl (no bot wall). Surfaces newest filings.
 const API = "https://api.sejm.gov.pl/sejm/term10/prints";
-// PDFs are served by the same API host — open access, no bot wall.
-// (orka.sejm.gov.pl has an F5 TSPD JS challenge that returns HTML.)
+// PDFs are served by the same API host — used for the full-text/excerpt
+// pipeline (no bot wall), but not as the user-facing URL.
 const ATTACHMENT_BASE = "https://api.sejm.gov.pl/sejm/term10/prints";
-// Bot-walled in browser-less fetches but works in a real browser.
+// User-facing detail page. Has an F5 TSPD JS challenge that fails in
+// browser-less fetches but resolves automatically in a real browser.
 const PUBLIC_BASE = "https://www.sejm.gov.pl/Sejm10.nsf/druk.xsp";
 const MAX_ITEMS = 200;
 
@@ -37,12 +38,7 @@ export const sejmPrintsAdapter: SourceAdapter = {
       const publishedAt = parseISODate(p.documentDate);
       if (!publishedAt) continue;
 
-      const attachment = p.attachments?.[0];
-      // Prefer the raw PDF (no bot wall) when present; fall back to the
-      // public detail page (works in a browser).
-      const url = attachment
-        ? `${ATTACHMENT_BASE}/${p.number}/${attachment}`
-        : `${PUBLIC_BASE}?nr=${p.number}`;
+      const url = `${PUBLIC_BASE}?nr=${p.number}`;
 
       items.push({
         externalId: `druk-${p.number}`,
