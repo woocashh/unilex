@@ -1,15 +1,21 @@
-import type { SourceAdapter, NormalizedItem, AdapterContext } from "../types";
+import type { SourceAdapter, NormalizedItem } from "../types";
 
 // Sejm — interpelacje. Parliamentary interpellations: written questions from
 // MPs to government officials, plus replies. Uses the official Sejm API.
 //
-// The list endpoint orders by interpellation number ascending and exposes no
-// "sort desc" or "since by receiptDate" param — so we binary-search the total
-// count, then fetch the tail (newest items).
+// The API exposes a `since` filter (matched against lastModified). We pass
+// `since=<lookback>` and get every interpellation touched in the window in a
+// single call — no offset/total juggling. We still filter the result set
+// down to items whose receiptDate is within lookback so we only alert on
+// genuinely new interpellations, not ancient ones that just got a reply.
+// (The `sort` param is blocked by the upstream WAF.)
 const API = "https://api.sejm.gov.pl/sejm/term10/interpellations";
 const PUBLIC_BASE = "https://sejm.gov.pl/sejm10.nsf/interpelacja.xsp";
 const LOOKBACK_DAYS = 30;
-const TAIL_FETCH = 500;
+// API sorts by num ASC and the WAF blocks ?sort=, so we have to fetch every
+// item modified in the window in one shot — otherwise the highest (newest)
+// nums get truncated. ~700 items in a 30-day window ≈ 600KB.
+const PAGE_LIMIT = 2000;
 const MAX_ITEMS = 200;
 
 type Link = { rel: string; href: string };
@@ -39,18 +45,16 @@ type ApiInterpellation = {
 export const sejmInterpelacjeAdapter: SourceAdapter = {
   key: "sejm-interpelacje",
   async fetchItems(ctx): Promise<NormalizedItem[]> {
-    const total = await findTotal(ctx);
-    if (total === 0) return [];
+    const cutoffMs = Date.now() - LOOKBACK_DAYS * 86_400_000;
+    const sinceDay = new Date(cutoffMs).toISOString().slice(0, 10);
 
-    const tailOffset = Math.max(0, total - TAIL_FETCH);
-    const res = await ctx.fetch(`${API}?limit=${TAIL_FETCH}&offset=${tailOffset}`, {
-      headers: { accept: "application/json" },
-      timeoutMs: 25_000,
-    });
+    const res = await ctx.fetch(
+      `${API}?limit=${PAGE_LIMIT}&since=${sinceDay}`,
+      { headers: { accept: "application/json" }, timeoutMs: 30_000 },
+    );
     if (!res.ok) throw new Error(`Sejm interpellations API ${res.status}`);
     const list = (await res.json()) as ApiInterpellation[];
 
-    const cutoffMs = Date.now() - LOOKBACK_DAYS * 86_400_000;
     const items: NormalizedItem[] = [];
     for (const it of list) {
       if (!it.num || !it.title) continue;
@@ -75,45 +79,6 @@ export const sejmInterpelacjeAdapter: SourceAdapter = {
     return items.slice(0, MAX_ITEMS);
   },
 };
-
-/**
- * Binary-search the offset that just barely returns items. Returns the
- * approximate total count (good to within ~20).
- */
-async function findTotal(ctx: AdapterContext): Promise<number> {
-  // First expand: 1k, 2k, 4k, … until offset is past total.
-  let lo = 0;
-  let hi = 1_000;
-  while (hi < 200_000) {
-    const r = await probe(ctx, hi);
-    if (r) {
-      lo = hi;
-      hi *= 2;
-    } else {
-      break;
-    }
-  }
-  if (lo === 0) return 0;
-
-  // Narrow within (lo, hi) to ~20-row precision.
-  while (hi - lo > 20) {
-    const mid = Math.floor((lo + hi) / 2);
-    const r = await probe(ctx, mid);
-    if (r) lo = mid;
-    else hi = mid;
-  }
-  return lo + 20;
-}
-
-async function probe(ctx: AdapterContext, offset: number): Promise<boolean> {
-  const r = await ctx.fetch(`${API}?limit=1&offset=${offset}`, {
-    headers: { accept: "application/json" },
-    timeoutMs: 10_000,
-  });
-  if (!r.ok) return false;
-  const arr = (await r.json()) as ApiInterpellation[];
-  return Array.isArray(arr) && arr.length > 0;
-}
 
 function composeFullText(it: ApiInterpellation): string {
   const parts: string[] = [];

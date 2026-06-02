@@ -4,7 +4,7 @@ import { getAdapter } from "./registry";
 import { makeAdapterFetch } from "./http";
 import type { NormalizedItem } from "./types";
 
-const ADAPTER_TIMEOUT_MS = 25_000;
+const ADAPTER_TIMEOUT_MS = 60_000;
 
 type RunResult = {
   source: string;
