@@ -4,6 +4,9 @@ import { runAllScrapers } from "@/lib/scrapers/runner";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
+// legislacja.gov.pl (RCL) drops connections from US-region Vercel IPs but
+// answers fine from EU. Pin the cron to Frankfurt so RCL scrapes succeed.
+export const preferredRegion = "fra1";
 
 export async function GET(req: Request) {
   const auth = req.headers.get("authorization");
