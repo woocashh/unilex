@@ -20,11 +20,14 @@ export const uodoAdapter: SourceAdapter = {
       if (!href || !title) return;
 
       const url = new URL(href, baseUrl).toString();
-      // Only news items: their URL path ends with /<sectionId>/<articleId>.
+      // News items live at /pl/<sectionId>/<articleId> — the article ID is
+      // the trailing segment. Anchor to the end so the regex doesn't grab
+      // the section ID (which would collapse 700+ items onto one external_id
+      // and silently dedupe everything to a single row).
       const path = new URL(url).pathname;
-      if (!/\/pl\/\d+\/\d+/.test(path)) return;
-      const idMatch = /\/(\d+)(?:[/?#]|$)/.exec(path);
-      const externalId = idMatch ? idMatch[1] : url;
+      const idMatch = /\/\d+\/(\d+)$/.exec(path);
+      if (!idMatch) return;
+      const externalId = idMatch[1];
 
       const dateText = $el.find(".ui-card__description span").first().text().trim();
       const publishedAt = parsePlDate(dateText);

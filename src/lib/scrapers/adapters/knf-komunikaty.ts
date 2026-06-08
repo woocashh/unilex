@@ -40,10 +40,13 @@ export const knfKomunikatyAdapter: SourceAdapter = {
       const articleId = new URL(url).searchParams.get("articleId");
       if (!articleId) return;
 
-      // Date is rendered inside the link or just below; try several places.
-      const dateText = $el.find("[class*='date']").first().text().trim()
-        || $el.text().match(/\b\d{1,2}\s+\p{L}+\s+\d{4}\b/u)?.[0]
-        || "";
+      // KNF puts the date in a paragraph prefixed "Data aktualizacji". Don't
+      // regex over the whole anchor — titles like "...31 grudnia 2036 roku"
+      // would otherwise be parsed as the publication date.
+      const $dateP = $el.find("p").filter(
+        (_, p) => /Data aktualizacji/i.test($(p).text()),
+      ).first();
+      const dateText = $dateP.text().match(/\d{1,2}\s+\p{L}+\s+\d{4}/u)?.[0] ?? "";
       const publishedAt = parsePlLongDate(dateText);
 
       items.push({ externalId: articleId, url, title, publishedAt });
