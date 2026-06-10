@@ -46,15 +46,15 @@ export function ActionedButton({
         }
       >
         <CheckIcon filled={isActioned} />
-        {isActioned ? "Actioned" : "Mark as actioned"}
+        {isActioned ? "Obsłużone" : "Oznacz jako obsłużone"}
       </button>
       {isActioned && actionedAt && (
         <p className="text-xs text-zinc-500">
-          on {format(new Date(actionedAt), "d MMM yyyy, HH:mm", { locale: pl })}
+          dnia {format(new Date(actionedAt), "d MMM yyyy, HH:mm", { locale: pl })}
         </p>
       )}
       {error && (
-        <p className="text-xs text-red-600 dark:text-red-400">Failed: {error}</p>
+        <p className="text-xs text-red-600 dark:text-red-400">Błąd: {error}</p>
       )}
     </div>
   );

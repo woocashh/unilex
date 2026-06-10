@@ -5,13 +5,14 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Unilex — daily feed of Polish legal publications",
-  description: "Weekly digest of news from Polish regulators and lawmakers.",
+  title: "Unilex — codzienny przegląd polskich publikacji prawnych",
+  description:
+    "Cotygodniowe podsumowanie komunikatów polskich regulatorów i ustawodawcy.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="pl" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full bg-zinc-100 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
         {children}
       </body>

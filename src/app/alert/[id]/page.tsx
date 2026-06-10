@@ -6,6 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Alert, Source } from "@/lib/supabase/types";
 import { TopNav } from "@/components/TopNav";
 import { SourceAvatar } from "@/components/SourceAvatar";
+import { sourceColor } from "@/lib/sourceColor";
 import { ensureFullText } from "@/lib/scrapers/article";
 import { SUMMARIZER_LABEL } from "@/lib/ai/openrouter";
 import { SummarizeButton } from "./SummarizeButton";
@@ -53,16 +54,23 @@ export default async function AlertPage({ params }: { params: Params }) {
           href="/feed"
           className="mb-4 inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
         >
-          ← Back to feed
+          ← Wróć do aktualności
         </Link>
 
         <article className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900 sm:p-8">
           {/* Source row */}
           <div className="flex items-center gap-3">
-            {source && <SourceAvatar name={source.name} slug={source.slug} size={40} />}
+            {source && (
+              <SourceAvatar
+                name={source.name}
+                slug={source.slug}
+                size={40}
+                color={sourceColor(source)}
+              />
+            )}
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                {source?.name ?? "Unknown source"}
+                {source?.name ?? "Nieznane źródło"}
               </p>
               <p className="text-xs text-zinc-500">
                 {publishedAt
@@ -83,7 +91,7 @@ export default async function AlertPage({ params }: { params: Params }) {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:underline dark:text-blue-400"
             >
-              Read on {hostname(a.url)} ↗
+              Czytaj na {hostname(a.url)} ↗
             </a>
             {a.stream_url && (
               <a
@@ -107,7 +115,7 @@ export default async function AlertPage({ params }: { params: Params }) {
           <section>
             <div className="mb-3 flex items-center gap-2">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
-                AI summary
+                Streszczenie AI
               </h2>
               <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
                 {SUMMARIZER_LABEL}

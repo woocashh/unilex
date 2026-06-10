@@ -48,11 +48,11 @@ export function ArticlePreview({
           >
             {expanded ? (
               <>
-                <Chevron direction="up" /> Show less
+                <Chevron direction="up" /> Pokaż mniej
               </>
             ) : (
               <>
-                <Chevron direction="down" /> Show more
+                <Chevron direction="down" /> Pokaż więcej
               </>
             )}
           </button>
@@ -62,7 +62,7 @@ export function ArticlePreview({
             rel="noopener noreferrer"
             className="text-sm font-medium text-blue-700 hover:underline dark:text-blue-400"
           >
-            Open original ↗
+            Otwórz oryginał ↗
           </a>
         </div>
       )}

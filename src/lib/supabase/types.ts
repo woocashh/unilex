@@ -10,6 +10,9 @@ export type Source = {
   last_run_at: string | null;
   last_error: string | null;
   created_at: string;
+  /** Selector config for the 'custom-css' adapter; null for built-in adapters. */
+  config: unknown | null;
+  created_by: string | null;
 };
 
 export type Alert = {

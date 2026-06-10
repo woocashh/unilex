@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Source } from "@/lib/supabase/types";
+import { sourceColor } from "@/lib/sourceColor";
 import { SourceAvatar } from "./SourceAvatar";
 
 export function SidebarSources({
@@ -22,7 +23,7 @@ export function SidebarSources({
   return (
     <aside className="rounded-xl border border-zinc-200 bg-white p-2 dark:border-zinc-800 dark:bg-zinc-900">
       <h2 className="px-2 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-        Sources
+        Źródła
       </h2>
 
       <ul className="space-y-0.5">
@@ -35,10 +36,10 @@ export function SidebarSources({
                 aria-hidden
                 className="grid h-7 w-7 place-items-center rounded-full bg-zinc-200 text-[10px] font-bold text-zinc-600 dark:bg-zinc-700 dark:text-zinc-200"
               >
-                ALL
+                WSZ
               </span>
             }
-            label="All sources"
+            label="Wszystkie źródła"
             count={total}
           />
         </li>
@@ -50,7 +51,14 @@ export function SidebarSources({
               <Row
                 href={buildHref(s.slug)}
                 selected={selectedSlug === s.slug}
-                avatar={<SourceAvatar name={s.name} slug={s.slug} size={28} />}
+                avatar={
+                  <SourceAvatar
+                    name={s.name}
+                    slug={s.slug}
+                    size={28}
+                    color={sourceColor(s)}
+                  />
+                }
                 label={s.name}
                 count={count}
               />

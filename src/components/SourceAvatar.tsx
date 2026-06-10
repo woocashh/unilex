@@ -16,10 +16,13 @@ export function SourceAvatar({
   name,
   slug,
   size = 36,
+  color,
 }: {
   name: string;
   slug: string;
   size?: number;
+  /** Explicit color (user-configured feeds); falls back to the slug hash. */
+  color?: string | null;
 }) {
   const hue = hashHue(slug);
   return (
@@ -29,7 +32,7 @@ export function SourceAvatar({
       style={{
         width: size,
         height: size,
-        backgroundColor: `hsl(${hue}, 55%, 42%)`,
+        backgroundColor: color || `hsl(${hue}, 55%, 42%)`,
       }}
     >
       {initials(name)}

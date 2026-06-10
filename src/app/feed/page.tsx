@@ -1,8 +1,9 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Alert, Source } from "@/lib/supabase/types";
 import { parseDateRange } from "@/lib/dateRange";
+import { plural } from "@/lib/plural";
 import { format } from "date-fns";
-import { enUS } from "date-fns/locale";
+import { pl } from "date-fns/locale";
 import { TopNav } from "@/components/TopNav";
 import { FilterBar, type StatusFilter } from "@/components/FilterBar";
 import { FeedItem } from "@/components/FeedItem";
@@ -94,13 +95,13 @@ export default async function FeedPage({ searchParams }: { searchParams: SearchP
 
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
             <span>
-              {alerts.length} item{alerts.length === 1 ? "" : "s"}
+              {alerts.length} {plural(alerts.length, "pozycja", "pozycje", "pozycji")}
             </span>
             <span aria-hidden>·</span>
             <span>
               {range.isDefault
-                ? "Last 7 days"
-                : `${format(range.start, "MMM d, yyyy", { locale: enUS })} – ${format(range.end, "MMM d, yyyy", { locale: enUS })}`}
+                ? "Ostatnie 7 dni"
+                : `${format(range.start, "d MMM yyyy", { locale: pl })} – ${format(range.end, "d MMM yyyy", { locale: pl })}`}
             </span>
             {hasFilters && (
               <>
@@ -109,7 +110,7 @@ export default async function FeedPage({ searchParams }: { searchParams: SearchP
                   href="/feed"
                   className="underline hover:text-zinc-700 dark:hover:text-zinc-300"
                 >
-                  Clear all filters
+                  Wyczyść wszystkie filtry
                 </a>
               </>
             )}
@@ -123,7 +124,7 @@ export default async function FeedPage({ searchParams }: { searchParams: SearchP
             {grouped.map(([day, items]) => (
               <section key={day}>
                 <h2 className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
-                  {format(new Date(day), "EEEE, MMMM d", { locale: enUS })}
+                  {format(new Date(day), "EEEE, d MMMM", { locale: pl })}
                 </h2>
                 <div className="space-y-2">
                   {items.map((a) => (
@@ -149,15 +150,15 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
   return (
     <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-10 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900">
       <p className="font-medium text-zinc-700 dark:text-zinc-300">
-        Nothing matches the current filters.
+        Brak wyników dla bieżących filtrów.
       </p>
       <p className="mt-1">
         {hasFilters ? (
           <a className="underline hover:text-zinc-900 dark:hover:text-zinc-100" href="/feed">
-            Clear all filters
+            Wyczyść wszystkie filtry
           </a>
         ) : (
-          "Try widening the date range above."
+          "Spróbuj poszerzyć zakres dat powyżej."
         )}
       </p>
     </div>

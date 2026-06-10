@@ -2,6 +2,7 @@ import Link from "next/link";
 import { format, formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import type { Alert, Source } from "@/lib/supabase/types";
+import { sourceColor } from "@/lib/sourceColor";
 import { SourceAvatar } from "./SourceAvatar";
 
 // Most PL gov sources only expose a date, parsed by adapters as UTC midnight.
@@ -47,7 +48,13 @@ export function FeedItem({
             : "group flex gap-3 rounded-xl border border-zinc-200 bg-white p-4 transition hover:border-zinc-300 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
         }
       >
-        {source && <SourceAvatar name={source.name} slug={source.slug} />}
+        {source && (
+          <SourceAvatar
+            name={source.name}
+            slug={source.slug}
+            color={sourceColor(source)}
+          />
+        )}
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
@@ -72,7 +79,7 @@ export function FeedItem({
             {actioned ? (
               <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
                 <CheckBadgeIcon />
-                ACTIONED
+                OBSŁUŻONE
               </span>
             ) : !read ? (
               <span
@@ -80,7 +87,7 @@ export function FeedItem({
                 className="ml-auto inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                NEW
+                NOWE
               </span>
             ) : null}
           </div>

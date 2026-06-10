@@ -39,6 +39,18 @@ export async function runAllScrapers(): Promise<RunResult[]> {
   );
 }
 
+/** Scrape a single source immediately — used right after a feed is created. */
+export async function runSourceById(sourceId: string): Promise<RunResult | null> {
+  const admin = createSupabaseAdminClient();
+  const { data: source, error } = await admin
+    .from("sources")
+    .select("*")
+    .eq("id", sourceId)
+    .single();
+  if (error || !source) return null;
+  return runOne(source as Source, admin);
+}
+
 async function runOne(
   source: Source,
   admin: ReturnType<typeof createSupabaseAdminClient>,
@@ -75,6 +87,7 @@ async function runOne(
     items = await withTimeout(
       adapter.fetchItems({
         baseUrl: source.base_url,
+        config: source.config,
         deadline,
         fetch: makeAdapterFetch(ADAPTER_TIMEOUT_MS),
       }),

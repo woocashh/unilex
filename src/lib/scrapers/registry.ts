@@ -11,6 +11,8 @@ import { sejmProcessesAdapter } from "./adapters/sejm-processes";
 import { sejmPoskomAdapter } from "./adapters/sejm-poskom";
 import { sejmInterpelacjeAdapter } from "./adapters/sejm-interpelacje";
 import { rclLegislacjaAdapter } from "./adapters/rcl-legislacja";
+import { customCssAdapter } from "./adapters/custom-css";
+import { rssAdapter } from "./adapters/rss";
 
 const adapters: SourceAdapter[] = [
   knfAdapter,
@@ -25,6 +27,8 @@ const adapters: SourceAdapter[] = [
   sejmPoskomAdapter,
   sejmInterpelacjeAdapter,
   rclLegislacjaAdapter,
+  customCssAdapter,
+  rssAdapter,
 ];
 
 export const adapterRegistry: Record<string, SourceAdapter> = Object.fromEntries(

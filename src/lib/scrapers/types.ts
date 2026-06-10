@@ -28,6 +28,8 @@ export interface AdapterFetchInit {
 export interface AdapterContext {
   /** Per-source base URL from the DB row. */
   baseUrl: string;
+  /** Per-source JSON config from the DB row — used by config-driven adapters. */
+  config?: unknown;
   /** Hard deadline; adapter should bail before this. */
   deadline: Date;
   /** Use this instead of global fetch — follows redirects, has UA + timeout. */

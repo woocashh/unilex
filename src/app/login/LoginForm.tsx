@@ -20,25 +20,25 @@ export function LoginForm({ next }: { next?: string }) {
     <form action={onSubmit} className="mt-5 space-y-3">
       {next && <input type="hidden" name="next" value={next} />}
       <label className="block">
-        <span className="sr-only">Email</span>
+        <span className="sr-only">Adres e-mail</span>
         <input
           type="email"
           name="email"
           autoFocus
           required
           autoComplete="email"
-          placeholder="you@example.com"
+          placeholder="jan.kowalski@example.com"
           className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-700"
         />
       </label>
       <label className="block">
-        <span className="sr-only">Password</span>
+        <span className="sr-only">Hasło</span>
         <input
           type="password"
           name="password"
           required
           autoComplete="current-password"
-          placeholder="Password"
+          placeholder="Hasło"
           className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-sm focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:border-zinc-700 dark:bg-zinc-950 dark:focus:border-zinc-600 dark:focus:ring-zinc-700"
         />
       </label>
@@ -47,7 +47,7 @@ export function LoginForm({ next }: { next?: string }) {
         disabled={pending}
         className="h-10 w-full rounded-lg bg-zinc-900 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-60 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
       >
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? "Logowanie…" : "Zaloguj się"}
       </button>
       {error && (
         <p className="text-xs text-red-600 dark:text-red-400">{error}</p>

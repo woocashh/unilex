@@ -38,7 +38,7 @@ export function FilterBar({
           type="search"
           name="q"
           defaultValue={initialQuery}
-          placeholder="Search title or excerpt…"
+          placeholder="Szukaj w tytule lub zajawce…"
           autoComplete="off"
           className="h-10 w-full rounded-full border border-zinc-200 bg-white py-2 pl-10 pr-3 text-sm placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:border-zinc-800 dark:bg-zinc-900 dark:focus:border-zinc-600 dark:focus:ring-zinc-700"
         />
@@ -50,10 +50,10 @@ export function FilterBar({
           name="source"
           defaultValue={selectedSlug}
           onChange={(e) => e.currentTarget.form?.submit()}
-          aria-label="Filter by source"
+          aria-label="Filtruj według źródła"
           className="h-10 w-full appearance-none rounded-full border border-zinc-200 bg-white pl-4 pr-9 text-sm focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:border-zinc-800 dark:bg-zinc-900 dark:focus:border-zinc-600 dark:focus:ring-zinc-700"
         >
-          <option value="">All sources</option>
+          <option value="">Wszystkie źródła</option>
           {sortedSources.map((s) => (
             <option key={s.id} value={s.slug}>
               {s.name}
@@ -65,21 +65,21 @@ export function FilterBar({
 
       {/* Status — segmented control, written into the URL as ?status= */}
       <fieldset className="flex h-10 items-center gap-0.5 rounded-full border border-zinc-200 bg-white p-1 text-xs dark:border-zinc-800 dark:bg-zinc-900">
-        <legend className="sr-only">Filter by status</legend>
-        <StatusOption name="status" value="" current={selectedStatus} label="All" />
-        <StatusOption name="status" value="open" current={selectedStatus} label="Open" />
+        <legend className="sr-only">Filtruj według statusu</legend>
+        <StatusOption name="status" value="" current={selectedStatus} label="Wszystkie" />
+        <StatusOption name="status" value="open" current={selectedStatus} label="Otwarte" />
         <StatusOption
           name="status"
           value="actioned"
           current={selectedStatus}
-          label="Actioned"
+          label="Obsłużone"
         />
       </fieldset>
 
       {/* Date range */}
       <div className="flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-1 dark:border-zinc-800 dark:bg-zinc-900">
         <label className="flex items-center gap-1.5 text-xs text-zinc-500">
-          <span>From</span>
+          <span>Od</span>
           <input
             type="date"
             name="from"
@@ -91,7 +91,7 @@ export function FilterBar({
         </label>
         <span className="text-zinc-300 dark:text-zinc-700">·</span>
         <label className="flex items-center gap-1.5 text-xs text-zinc-500">
-          <span>To</span>
+          <span>Do</span>
           <input
             type="date"
             name="to"
@@ -109,7 +109,7 @@ export function FilterBar({
           href={buildLast7DaysHref(selectedSlug, initialQuery)}
           className="text-xs font-medium text-zinc-600 underline-offset-2 hover:underline dark:text-zinc-300"
         >
-          Last 7 days
+          Ostatnie 7 dni
         </Link>
       )}
     </form>

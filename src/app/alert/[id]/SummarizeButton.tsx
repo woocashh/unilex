@@ -25,16 +25,16 @@ export function SummarizeButton({ alertId }: { alertId: string }) {
       >
         {pending ? (
           <>
-            <Spinner /> Generating summary…
+            <Spinner /> Generowanie streszczenia…
           </>
         ) : (
           <>
-            <Sparkle /> Generate AI summary
+            <Sparkle /> Wygeneruj streszczenie AI
           </>
         )}
       </button>
       {error && (
-        <p className="text-xs text-red-600 dark:text-red-400">Failed: {error}</p>
+        <p className="text-xs text-red-600 dark:text-red-400">Błąd: {error}</p>
       )}
     </div>
   );

@@ -11,12 +11,13 @@ insert into public.sources (slug, name, base_url, adapter_key, enabled) values
   ('cyfryzacja',      'Cyfryzacja — wiadomości',           'https://www.gov.pl/web/cyfryzacja/wiadomosci',          'gov-pl-news',   true),
   ('rodzina',         'Rodzina — aktualności i wiadomości','https://www.gov.pl/web/rodzina/aktualnosci-wiadomosci', 'gov-pl-news',   true),
   ('rcl-projekty-ustaw',         'RCL — projekty ustaw',         'https://legislacja.gov.pl/lista?typeId=2',  'rcl-legislacja',true),
-  ('rcl-projekty-rozporzadzen',  'RCL — projekty rozporządzeń',  'https://legislacja.gov.pl/lista?typeId=10', 'rcl-legislacja',true)
+  ('rcl-projekty-rozporzadzen',  'RCL — projekty rozporządzeń',  'https://legislacja.gov.pl/lista?typeId=10', 'rcl-legislacja',true),
+  -- rf.gov.pl HTML sits behind Incapsula, but the WordPress RSS feed is open.
+  ('rf',             'Rzecznik Finansowy',                  'https://rf.gov.pl/category/aktualnosci/feed/',           'rss',           true)
 on conflict (slug) do nothing;
 
 -- Disabled (adapter pending: SPA / bot wall / Lotus Domino):
 insert into public.sources (slug, name, base_url, adapter_key, enabled) values
-  ('rf',             'Rzecznik Finansowy',                  'https://rf.gov.pl/aktualnosci/',                                                 'rf',             false),
   ('premier-wplip',  'KPRM — WPLiP RM',                     'https://www.gov.pl/web/premier/wplip-rm',                                        'gov-pl-wplip',   false),
   ('sejm-przeglad',  'Sejm — przegląd projektów ustaw',     'https://www.sejm.gov.pl/Sejm10.nsf/page.xsp/przeglad_projust',                   'sejm-przeglad',  false),
   ('sejm-proces',    'Sejm — proces legislacyjny',          'https://www.sejm.gov.pl/Sejm10.nsf/proces.xsp?view=4',                           'sejm-proces',    false),

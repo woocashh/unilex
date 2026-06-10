@@ -12,13 +12,13 @@ export async function signIn(formData: FormData): Promise<Result> {
   const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/feed";
 
   if (!email || !password) {
-    return { ok: false, error: "Email and password are required." };
+    return { ok: false, error: "Adres e-mail i hasło są wymagane." };
   }
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    return { ok: false, error: "Invalid email or password." };
+    return { ok: false, error: "Nieprawidłowy adres e-mail lub hasło." };
   }
   redirect(next);
 }

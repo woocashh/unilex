@@ -15,16 +15,16 @@ export default async function LoginPage({ searchParams }: { searchParams: Search
           <span className="text-lg font-semibold tracking-tight">Unilex</span>
         </div>
 
-        <h1 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">Sign in</h1>
+        <h1 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">Zaloguj się</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Enter your credentials to access the feed.
+          Podaj dane logowania, aby uzyskać dostęp do aktualności.
         </p>
 
         <LoginForm next={next} />
 
         <p className="mt-6 text-[11px] leading-relaxed text-zinc-400">
-          Each user gets their own feed — read and actioned state is private to your
-          account.
+          Każdy użytkownik ma własny widok aktualności — statusy przeczytania
+          i obsłużenia są prywatne dla Twojego konta.
         </p>
       </div>
     </div>
