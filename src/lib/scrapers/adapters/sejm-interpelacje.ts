@@ -48,12 +48,40 @@ export const sejmInterpelacjeAdapter: SourceAdapter = {
     const cutoffMs = Date.now() - LOOKBACK_DAYS * 86_400_000;
     const sinceDay = new Date(cutoffMs).toISOString().slice(0, 10);
 
+    // The list endpoint appears to serve Vercel's cloud egress IPs a stale
+    // snapshot (frozen since early June while the public API is current). Bust
+    // any naive edge cache two ways: jitter the `limit` (a param the WAF
+    // accepts, so the query-string cache key changes every run) and send
+    // no-cache request headers. `limit` stays oversized so nothing is dropped.
+    const limit = PAGE_LIMIT + (Date.now() % 100);
     const res = await ctx.fetch(
-      `${API}?limit=${PAGE_LIMIT}&since=${sinceDay}`,
-      { headers: { accept: "application/json" }, timeoutMs: 30_000 },
+      `${API}?limit=${limit}&since=${sinceDay}`,
+      {
+        headers: {
+          accept: "application/json",
+          "cache-control": "no-cache",
+          pragma: "no-cache",
+        },
+        timeoutMs: 30_000,
+      },
     );
     if (!res.ok) throw new Error(`Sejm interpellations API ${res.status}`);
     const list = (await res.json()) as ApiInterpellation[];
+
+    // DIAGNOSTIC: log how fresh the API response is as seen from Vercel. If
+    // maxNum/maxReceipt lag the public API (currently num 17724 / 2026-06-11),
+    // the cloud-IP staleness is confirmed and we switch to per-item cursor
+    // fetching. Remove once the root cause is resolved.
+    let maxNum = 0;
+    let maxReceipt = "";
+    for (const it of list) {
+      if (typeof it.num === "number" && it.num > maxNum) maxNum = it.num;
+      if (it.receiptDate && it.receiptDate > maxReceipt) maxReceipt = it.receiptDate;
+    }
+    console.log(
+      `[sejm-interpelacje] api returned ${list.length} items; ` +
+        `maxNum=${maxNum} maxReceipt=${maxReceipt} since=${sinceDay} limit=${limit}`,
+    );
 
     const items: NormalizedItem[] = [];
     for (const it of list) {
