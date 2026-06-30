@@ -1,22 +1,17 @@
-import type { SourceAdapter, NormalizedItem } from "../types";
+import type { SourceAdapter, NormalizedItem, AdapterContext } from "../types";
 
-// Sejm — interpelacje. Parliamentary interpellations: written questions from
-// MPs to government officials, plus replies. Uses the official Sejm API.
-//
-// The API exposes a `since` filter (matched against lastModified). We pass
-// `since=<lookback>` and get every interpellation touched in the window in a
-// single call — no offset/total juggling. We still filter the result set
-// down to items whose receiptDate is within lookback so we only alert on
-// genuinely new interpellations, not ancient ones that just got a reply.
-// (The `sort` param is blocked by the upstream WAF.)
 const API = "https://api.sejm.gov.pl/sejm/term10/interpellations";
 const PUBLIC_BASE = "https://sejm.gov.pl/sejm10.nsf/interpelacja.xsp";
 const LOOKBACK_DAYS = 30;
-// API sorts by num ASC and the WAF blocks ?sort=, so we have to fetch every
-// item modified in the window in one shot — otherwise the highest (newest)
-// nums get truncated. ~700 items in a 30-day window ≈ 600KB.
 const PAGE_LIMIT = 2000;
 const MAX_ITEMS = 200;
+// Individual-item probing: the Sejm CDN caches the list endpoint for cloud
+// IPs, so we supplement with /interpellations/{num} fetches for items above
+// the list's max num. Stop after this many consecutive 404s (handles sparse
+// gaps in the numbering).
+const PROBE_BATCH = 30;
+const PROBE_MAX_CONSECUTIVE_MISS = 40;
+const PROBE_MAX_ITEMS = 1500;
 
 type Link = { rel: string; href: string };
 type Attachment = { URL: string; name: string; lastModified?: string };
@@ -68,10 +63,6 @@ export const sejmInterpelacjeAdapter: SourceAdapter = {
     if (!res.ok) throw new Error(`Sejm interpellations API ${res.status}`);
     const list = (await res.json()) as ApiInterpellation[];
 
-    // DIAGNOSTIC: log how fresh the API response is as seen from Vercel. If
-    // maxNum/maxReceipt lag the public API (currently num 17724 / 2026-06-11),
-    // the cloud-IP staleness is confirmed and we switch to per-item cursor
-    // fetching. Remove once the root cause is resolved.
     let maxNum = 0;
     let maxReceipt = "";
     for (const it of list) {
@@ -79,9 +70,28 @@ export const sejmInterpelacjeAdapter: SourceAdapter = {
       if (it.receiptDate && it.receiptDate > maxReceipt) maxReceipt = it.receiptDate;
     }
     console.log(
-      `[sejm-interpelacje] api returned ${list.length} items; ` +
+      `[sejm-interpelacje] list returned ${list.length} items; ` +
         `maxNum=${maxNum} maxReceipt=${maxReceipt} since=${sinceDay} limit=${limit}`,
     );
+
+    // The Sejm CDN caches the list endpoint for cloud IPs, making it lag
+    // the real state by days/weeks. Supplement by probing individual item
+    // endpoints (/interpellations/{num}) starting above the list's max.
+    const probed = await probeNewItems(ctx, maxNum);
+    if (probed.length) {
+      const seen = new Set(list.map((it) => it.num));
+      for (const p of probed) {
+        if (!seen.has(p.num)) {
+          list.push(p);
+          seen.add(p.num);
+        }
+      }
+      const probedMax = probed.reduce((m, it) => Math.max(m, it.num ?? 0), 0);
+      console.log(
+        `[sejm-interpelacje] probed ${probed.length} new items above list max; ` +
+          `probedMax=${probedMax}`,
+      );
+    }
 
     const items: NormalizedItem[] = [];
     for (const it of list) {
@@ -107,6 +117,53 @@ export const sejmInterpelacjeAdapter: SourceAdapter = {
     return items.slice(0, MAX_ITEMS);
   },
 };
+
+async function probeNewItems(
+  ctx: AdapterContext,
+  startAfterNum: number,
+): Promise<ApiInterpellation[]> {
+  if (startAfterNum <= 0) return [];
+  const found: ApiInterpellation[] = [];
+  let consecutiveMiss = 0;
+
+  for (
+    let base = startAfterNum + 1;
+    consecutiveMiss < PROBE_MAX_CONSECUTIVE_MISS &&
+    found.length < PROBE_MAX_ITEMS &&
+    Date.now() < ctx.deadline.getTime() - 5_000;
+    base += PROBE_BATCH
+  ) {
+    const nums = Array.from({ length: PROBE_BATCH }, (_, i) => base + i);
+    const results = await Promise.allSettled(
+      nums.map((n) => fetchOne(ctx, n)),
+    );
+    for (const r of results) {
+      if (r.status === "fulfilled" && r.value) {
+        found.push(r.value);
+        consecutiveMiss = 0;
+      } else {
+        consecutiveMiss++;
+      }
+    }
+  }
+  return found;
+}
+
+async function fetchOne(
+  ctx: AdapterContext,
+  num: number,
+): Promise<ApiInterpellation | null> {
+  try {
+    const res = await ctx.fetch(`${API}/${num}`, {
+      headers: { accept: "application/json" },
+      timeoutMs: 10_000,
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as ApiInterpellation;
+  } catch {
+    return null;
+  }
+}
 
 function composeFullText(it: ApiInterpellation): string {
   const parts: string[] = [];
